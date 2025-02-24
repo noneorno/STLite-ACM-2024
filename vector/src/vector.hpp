@@ -196,7 +196,7 @@ public:
 		 * TODO iter++
 		 */
 		const_iterator operator++(int) {
-			iterator temp = *this;
+			const_iterator temp = *this;
 			ptr += 1;
 			return temp;
 		}
@@ -211,7 +211,7 @@ public:
 		 * TODO iter--
 		 */
 		const_iterator operator--(int) {
-			iterator temp = *this;
+			const_iterator temp = *this;
 			ptr -= 1;
 			return temp;
 		}
@@ -263,7 +263,7 @@ public:
 	 */
 	vector():data(nullptr),size_(0),capacity(0) {}
 	vector(const vector &other) : data(nullptr), size_(other.size_), capacity(other.capacity) {
-		data = static_cast<T*>(::operator new(sizeof(T) * capacity));
+		data = static_cast<T*>(::operator new(sizeof(T) * capacity));//分配内存
 		for (size_t i = 0; i < size_; ++i) {
 			new(&data[i]) T(other.data[i]);
 		}
@@ -316,9 +316,15 @@ public:
 	 *   In STL this operator does not check the boundary but I want you to do.
 	 */
 	T & operator[](const size_t &pos) {
+		if (pos < 0 || pos >= size_) {
+			throw index_out_of_bound();
+		}
 		return data[pos];
 	}
 	const T & operator[](const size_t &pos) const {
+		if (pos < 0 || pos >= size_) {
+			throw index_out_of_bound();
+		}
 		return data[pos];
 	}
 	/**
@@ -438,11 +444,10 @@ public:
 	 * adds an element to the end.
 	 */
 	void push_back(const T &value) {
-		if (size_ == capacity) {
-			size_t new_capacity = (capacity == 0) ? 1 : capacity * 10;
-			resize(new_capacity);
+		if (size_ == capacity){
+			resize(capacity == 0? 1 : capacity * 2);
 		}
-		new(&data[size_]) T(value);
+		new (&data[size_]) T(value);
 		++size_;
 	}
 
@@ -451,11 +456,14 @@ public:
 	 * throw container_is_empty if size() == 0
 	 */
 	void pop_back() {
-		if (size_ == 0) {
-			throw container_is_empty();
+		if (empty()) {
+			throw container_is_empty();  // 如果容器为空，抛出异常
 		}
 		data[size_ - 1].~T();
 		--size_;
+		if (size_ < capacity / 4) {
+			resize(capacity / 2);
+		}
 	}
 };
 
